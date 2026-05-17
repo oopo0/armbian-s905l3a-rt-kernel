@@ -1,7 +1,7 @@
 name: Build S905L3A RT Kernel
 run-name: RT-Kernel-${{ github.run_id }}
 
-# 强制使用Node.js 24（解决Node20弃用错误，来自GitHub官方公告）
+# 强制使用Node.js 24（修复Node20弃用错误，来自GitHub官方公告）
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
@@ -11,9 +11,9 @@ on:
       kernel_ver:
         description: '内核版本（与你的系统一致）'
         required: true
-        default: '6.12.85'  # 你当前使用的内核版本
+        default: '6.12.85'  # 你当前用的就是这个版本！
       kernel_type:
-        description: '内核类型（选rt表示实时内核）'
+        description: '内核类型（选rt）'
         required: true
         default: 'rt'
 
