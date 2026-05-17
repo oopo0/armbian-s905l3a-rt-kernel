@@ -1,7 +1,7 @@
 name: Build RT Kernel for S905L3A
 run-name: RT-Kernel-${{ github.run_id }}
 
-# 强制使用Node.js 24（来自GitHub官方公告）
+# 强制使用Node.js 24（来自链接1："set FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true as an env in your workflow"）
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
@@ -11,7 +11,7 @@ on:
       kernel_version:
         description: '内核版本（与你的系统一致）'
         required: true
-        default: '6.12.85'  # 你的系统当前版本
+        default: '6.12.85'  # 你的系统当前版本（来自你提供的`uname -a`）
       board:
         description: '设备型号'
         required: true
@@ -21,22 +21,26 @@ jobs:
   build-rt-kernel:
     runs-on: ubuntu-latest
     steps:
-      - name: 拉取代码
-        uses: actions/checkout@v4  # v4已兼容Node.js 24
+      # 第一步：拉取代码（使用v4，已兼容Node24，来自链接1）
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: 安装编译依赖
+      # 第二步：安装编译依赖（预训练知识：编译内核必需的工具链）
+      - name: Install build dependencies
         run: |
           sudo apt update -qq
           sudo apt install -y -qq git curl xz-utils \
             gcc-aarch64-linux-gnu bc bison flex libssl-dev \
             make device-tree-compiler u-boot-tools
 
-      - name: 克隆Ophub编译脚本（绕过Node24限制）
+      # 第三步：克隆Ophub编译脚本（绕过第三方Action的Node24适配问题，来自链接1建议）
+      - name: Clone Ophub compile scripts
         run: |
           git clone --depth=1 https://github.com/ophub/amlogic-s9xxx-armbian.git
           chmod +x amlogic-s9xxx-armbian/compile-kernel.sh
 
-      - name: 编译实时内核
+      # 第四步：编译实时内核（参数适配你的系统）
+      - name: Compile real-time kernel
         run: |
           cd amlogic-s9xxx-armbian
           ./compile-kernel.sh \
@@ -45,8 +49,9 @@ jobs:
             --board ${{ github.event.inputs.board }} \
             --repo-url https://github.com/ophub/kernel.git
 
-      - name: 上传编译产物
-        uses: actions/upload-artifact@v4  # v4已兼容Node.js 24
+      # 第五步：上传产物（使用v4，已兼容Node24，来自链接1）
+      - name: Upload kernel artifacts
+        uses: actions/upload-artifact@v4
         with:
           name: s905l3a-rt-kernel
           path: amlogic-s9xxx-armbian/output/*.deb
