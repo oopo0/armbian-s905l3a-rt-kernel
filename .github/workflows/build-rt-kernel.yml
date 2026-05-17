@@ -1,28 +1,32 @@
-name: Build S905L3A RT Kernel
+name: Build RT Kernel for S905L3A
 run-name: RT-Kernel-${{ github.run_id }}
 
-# 强制使用Node.js 24（修复Node20弃用错误，来自GitHub官方公告）
+# 强制使用 Node.js 24（2026年3月4日起必须）
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 on:
-  workflow_dispatch:  # 手动触发，无需代码提交
+  workflow_dispatch:
     inputs:
-      kernel_ver:
+      kernel_version:
         description: '内核版本（与你的系统一致）'
         required: true
-        default: '6.12.85'  # 你当前用的就是这个版本！
-      kernel_type:
-        description: '内核类型（选rt）'
+        default: '6.12.85'
+      board:
+        description: '设备型号'
         required: true
-        default: 'rt'
+        default: 's905l3a'
+      enable_rt:
+        description: '启用实时内核'
+        required: true
+        default: 'true'
 
 jobs:
-  build:
-    runs-on: ubuntu-22.04  # GitHub官方免费运行器
+  build-rt-kernel:
+    runs-on: ubuntu-latest
     steps:
       - name: 拉取代码
-        uses: actions/checkout@v4  # 已兼容Node.js 24
+        uses: actions/checkout@v4  # v4 已支持 Node.js 24
 
       - name: 安装编译依赖
         run: |
@@ -31,23 +35,23 @@ jobs:
             gcc-aarch64-linux-gnu bc bison flex libssl-dev \
             make device-tree-compiler u-boot-tools
 
-      - name: 克隆ophub编译脚本
+      - name: 克隆 Ophub 编译脚本
         run: |
           git clone --depth=1 https://github.com/ophub/amlogic-s9xxx-armbian.git
           chmod +x amlogic-s9xxx-armbian/compile-kernel.sh
 
-      - name: 编译S905L3A实时内核
+      - name: 编译 S905L3A 实时内核
         run: |
           cd amlogic-s9xxx-armbian
           ./compile-kernel.sh \
-            --kernel ${{ github.event.inputs.kernel_ver }} \
-            --kernel-type ${{ github.event.inputs.kernel_type }} \
-            --board s905l3a \
+            --kernel ${{ github.event.inputs.kernel_version }} \
+            --kernel-type rt \
+            --board ${{ github.event.inputs.board }} \
             --repo-url https://github.com/ophub/kernel.git
 
       - name: 上传编译产物
-        uses: actions/upload-artifact@v4  # 已兼容Node.js 24
+        uses: actions/upload-artifact@v4  # v4 已支持 Node.js 24
         with:
           name: s905l3a-rt-kernel
-          path: amlogic-s9xxx-armbian/output/*
-          retention-days: 7  # 产物保留7天，足够你下载
+          path: amlogic-s9xxx-armbian/output/*.deb
+          retention-days: 7
