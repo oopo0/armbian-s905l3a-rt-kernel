@@ -1,7 +1,7 @@
 name: Build RT Kernel for S905L3A
 run-name: RT-Kernel-${{ github.run_id }}
 
-# 强制使用 Node.js 24（2026年3月4日起必须）
+# 关键修复：强制使用 Node.js 24（来自官方公告）
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
@@ -11,7 +11,7 @@ on:
       kernel_version:
         description: '内核版本（与你的系统一致）'
         required: true
-        default: '6.12.85'
+        default: '6.12.85'  # 你当前用的版本
       board:
         description: '设备型号'
         required: true
@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 拉取代码
-        uses: actions/checkout@v4  # v4 已支持 Node.js 24
+        uses: actions/checkout@v4  # 已兼容 Node.js 24
 
       - name: 安装编译依赖
         run: |
@@ -40,7 +40,7 @@ jobs:
           git clone --depth=1 https://github.com/ophub/amlogic-s9xxx-armbian.git
           chmod +x amlogic-s9xxx-armbian/compile-kernel.sh
 
-      - name: 编译 S905L3A 实时内核
+      - name: 编译实时内核
         run: |
           cd amlogic-s9xxx-armbian
           ./compile-kernel.sh \
@@ -50,7 +50,7 @@ jobs:
             --repo-url https://github.com/ophub/kernel.git
 
       - name: 上传编译产物
-        uses: actions/upload-artifact@v4  # v4 已支持 Node.js 24
+        uses: actions/upload-artifact@v4  # 已兼容 Node.js 24
         with:
           name: s905l3a-rt-kernel
           path: amlogic-s9xxx-armbian/output/*.deb
