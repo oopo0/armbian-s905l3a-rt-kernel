@@ -1,6 +1,10 @@
 name: Build S905L3A RT Kernel
 run-name: RT-Kernel-${{ github.run_id }}
 
+# 强制使用 Node.js 24（修复弃用错误）
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 on:
   workflow_dispatch:
     inputs:
