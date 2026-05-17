@@ -1,0 +1,47 @@
+name: 编译S905L3A实时内核
+run-name: RT内核编译-${{ github.run_id }}
+
+on:
+  workflow_dispatch:  # 手动点击触发，不用写代码
+    inputs:
+      kernel_ver:
+        description: '内核版本（和你的系统一致）'
+        required: true
+        default: '6.12.85'  # 你之前用的就是这个版本！
+      kernel_type:
+        description: '内核类型（选rt）'
+        required: true
+        default: 'rt'
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04  # GitHub免费境外服务器
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v4
+
+      - name: 装依赖
+        run: |
+          sudo apt update -qq
+          sudo apt install -y -qq git curl xz-utils gcc-aarch64-linux-gnu bc bison flex libssl-dev make device-tree-compiler u-boot-tools
+
+      - name: 拉取ophub编译脚本
+        run: |
+          git clone --depth=1 https://github.com/ophub/amlogic-s9xxx-armbian.git
+          chmod +x amlogic-s9xxx-armbian/compile-kernel.sh
+
+      - name: 编译S905L3A实时内核
+        run: |
+          cd amlogic-s9xxx-armbian
+          ./compile-kernel.sh \
+            --kernel ${{ github.event.inputs.kernel_ver }} \
+            --kernel-type ${{ github.event.inputs.kernel_type }} \
+            --board s905l3a \
+            --repo-url https://github.com/ophub/kernel.git
+
+      - name: 上传编译产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: s905l3a-rt-kernel
+          path: amlogic-s9xxx-armbian/output/*
+          retention-days: 7  # 产物保留7天，够你下载
