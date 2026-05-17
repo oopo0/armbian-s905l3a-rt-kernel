@@ -1,0 +1,1 @@
+# armbian-s905l3a-rt-kernel
