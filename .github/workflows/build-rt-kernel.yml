@@ -1,19 +1,13 @@
 name: Build RT Kernel for S905L3A
-run-name: RT-Kernel-${{ github.run_id }}
-
-# 关键修复：强制使用 Node.js 24（来自 GitHub 官方公告）
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 on:
   workflow_dispatch:
     inputs:
       kernel_version:
-        description: 'Kernel version (Match your system)'
+        description: '内核版本 (例如 6.12.85)'
         required: true
-        default: '6.12.85'  # 你的系统就是 6.12.85
+        default: '6.12.85'
       board:
-        description: 'Board Type'
+        description: '设备型号 (例如 s905l3a)'
         required: true
         default: 's905l3a'
 
@@ -21,33 +15,15 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4  # v4 在 Node 24 下运行
+      # 第一步：拉取代码（最关键的一步）
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Install Dependencies
+      # 第二步：随便装个工具测试一下环境
+      - name: Test Env
         run: |
-          sudo apt update -qq
-          sudo apt install -y -qq git curl xz-utils \
-            gcc-aarch64-linux-gnu bc bison flex libssl-dev \
-            make device-tree-compiler u-boot-tools
-
-      - name: Clone Ophub Scripts (Bypass Node20 Action Issue)
-        run: |
+          echo "Node版本: $(node -v)"
+          echo "清理旧文件..."
+          rm -rf amlogic-s9xxx-armbian
+          echo "开始克隆编译脚本..."
           git clone --depth=1 https://github.com/ophub/amlogic-s9xxx-armbian.git
-          chmod +x amlogic-s9xxx-armbian/compile-kernel.sh
-
-      - name: Compile Real-time Kernel
-        run: |
-          cd amlogic-s9xxx-armbian
-          ./compile-kernel.sh \
-            --kernel ${{ github.event.inputs.kernel_version }} \
-            --kernel-type rt \
-            --board ${{ github.event.inputs.board }} \
-            --repo-url https://github.com/ophub/kernel.git
-
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: s905l3a-rt-kernel
-          path: amlogic-s9xxx-armbian/output/*.deb
-          retention-days: 7
